@@ -28,9 +28,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -y \
     util-linux \
     socat \
     git \
+    jq \
     nfs-common \
     glusterfs-client \
     cifs-utils \
+    ceph-common \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
     && DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* # CACHEBUST
