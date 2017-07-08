@@ -79,7 +79,10 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 		TLSHandshakeTimeout: 10 * time.Second,
 		TLSClientConfig:     tlsConfig,
 		MaxIdleConnsPerHost: idleConnsPerHost,
-		Dial:                dial,
+		Dial: failFastDial((&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial),
 	})
 	return c.transports[key], nil
 }
