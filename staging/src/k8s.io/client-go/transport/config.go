@@ -19,6 +19,7 @@ package transport
 import (
 	"net"
 	"net/http"
+	"time"
 )
 
 // Config holds various options for establishing a transport.
@@ -54,6 +55,12 @@ type Config struct {
 
 	// Dial specifies the dial function for creating unencrypted TCP connections.
 	Dial func(network, addr string) (net.Conn, error)
+
+	// ConnectionTimeout specifies the maximum interval transmitted data may
+	// remain unacknowledged (at the TCP layer) before the peer is considered
+	// dead and the connection is forcefully closed. A timeout <= 0 indicates
+	// no timeout.
+	ConnectionTimeout time.Duration
 }
 
 // ImpersonationConfig has all the available impersonation options

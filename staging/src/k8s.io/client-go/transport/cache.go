@@ -87,6 +87,9 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 			KeepAlive: 30 * time.Second,
 		}).Dial
 	}
+	if config.ConnectionTimeout > 0 {
+		dial = failFastDial(dial, config.ConnectionTimeout)
+	}
 	// Cache a single transport for these options
 	c.transports[key] = utilnet.SetTransportDefaults(&http.Transport{
 		Proxy:               http.ProxyFromEnvironment,

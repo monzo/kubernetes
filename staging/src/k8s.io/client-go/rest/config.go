@@ -113,6 +113,9 @@ type Config struct {
 	// Dial specifies the dial function for creating unencrypted TCP connections.
 	Dial func(network, addr string) (net.Conn, error)
 
+	// The maximum interval data may remain unacknowledged by an apiserver before the connection is considered dead and is forcefully closed.
+	ConnectionTimeout time.Duration
+
 	// Version forces a specific version to be used (if registered)
 	// Do we need this?
 	// Version string
@@ -446,13 +449,14 @@ func CopyConfig(config *Config) *Config {
 			KeyData:    config.TLSClientConfig.KeyData,
 			CAData:     config.TLSClientConfig.CAData,
 		},
-		UserAgent:     config.UserAgent,
-		Transport:     config.Transport,
-		WrapTransport: config.WrapTransport,
-		QPS:           config.QPS,
-		Burst:         config.Burst,
-		RateLimiter:   config.RateLimiter,
-		Timeout:       config.Timeout,
-		Dial:          config.Dial,
+		UserAgent:         config.UserAgent,
+		Transport:         config.Transport,
+		WrapTransport:     config.WrapTransport,
+		QPS:               config.QPS,
+		Burst:             config.Burst,
+		RateLimiter:       config.RateLimiter,
+		Timeout:           config.Timeout,
+		Dial:              config.Dial,
+		ConnectionTimeout: config.ConnectionTimeout,
 	}
 }
