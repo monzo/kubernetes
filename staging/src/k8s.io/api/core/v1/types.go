@@ -3978,6 +3978,13 @@ const (
 	ResourceEphemeralStorage ResourceName = "ephemeral-storage"
 	// NVIDIA GPU, in devices. Alpha, might change: although fractional and allowing values >1, only one whole device per node is assigned.
 	ResourceNvidiaGPU ResourceName = "alpha.kubernetes.io/nvidia-gpu"
+
+	// -- Monzo-specific
+
+	// CPU throttling period, in microseconds.
+	// NOTE: Only set this value yourself if you know very well how to tune the
+	// Linux CFS scheduler, or in consultation with the Platform team.
+	ResourceCPUPeriodUsec ResourceName = "monzo.com/cpu-period"
 )
 
 const (
