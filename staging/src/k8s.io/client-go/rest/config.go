@@ -29,7 +29,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -116,6 +116,9 @@ type Config struct {
 
 	// Dial specifies the dial function for creating unencrypted TCP connections.
 	Dial func(network, addr string) (net.Conn, error)
+
+	// The maximum interval data may remain unacknowledged by an apiserver before the connection is considered dead and is forcefully closed.
+	ConnectionTimeout time.Duration
 
 	// Version forces a specific version to be used (if registered)
 	// Do we need this?
@@ -413,14 +416,15 @@ func AnonymousClientConfig(config *Config) *Config {
 			CAFile:     config.TLSClientConfig.CAFile,
 			CAData:     config.TLSClientConfig.CAData,
 		},
-		RateLimiter:   config.RateLimiter,
-		UserAgent:     config.UserAgent,
-		Transport:     config.Transport,
-		WrapTransport: config.WrapTransport,
-		QPS:           config.QPS,
-		Burst:         config.Burst,
-		Timeout:       config.Timeout,
-		Dial:          config.Dial,
+		RateLimiter:       config.RateLimiter,
+		UserAgent:         config.UserAgent,
+		Transport:         config.Transport,
+		WrapTransport:     config.WrapTransport,
+		QPS:               config.QPS,
+		Burst:             config.Burst,
+		Timeout:           config.Timeout,
+		Dial:              config.Dial,
+		ConnectionTimeout: config.ConnectionTimeout,
 	}
 }
 

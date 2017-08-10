@@ -65,10 +65,13 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 
 	dial := config.Dial
 	if dial == nil {
-		dial = (&net.Dialer{
+		dial := dialFunc((&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-		}).Dial
+		}).Dial)
+		if config.ConnectionTimeout > 0 {
+			dial = failFastDial(dial, config.ConnectionTimeout)
+		}
 	}
 	// Cache a single transport for these options
 	c.transports[key] = utilnet.SetTransportDefaults(&http.Transport{
