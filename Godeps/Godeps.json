@@ -1891,6 +1891,10 @@
 			"Rev": "cca7078d478f8520f85629ad7c68962d31ed7682"
 		},
 		{
+			"ImportPath": "github.com/obeattie/tcp-failfast",
+			"Rev": "4e177a235cc8cf7c124319a8c14d3ff46df5a7db"
+		},
+		{
 			"ImportPath": "github.com/onsi/ginkgo",
 			"Comment": "v1.2.0-95-g67b9df7",
 			"Rev": "67b9df7f55fe1165fd9ad49aca7754cce01a42b8"
@@ -2377,6 +2381,10 @@
 			"Rev": "10ef21a441db47d8b13ebcc5fd2310f636973c77"
 		},
 		{
+			"ImportPath": "github.com/songgao/water",
+			"Rev": "99d07fc117afd4d997bc5ebca77c241644ffe24a"
+		},
+		{
 			"ImportPath": "github.com/spf13/afero",
 			"Rev": "b28a7effac979219c2a2ed6205a4d70e4b1bcd02"
 		},
@@ -2724,6 +2732,10 @@
 		},
 		{
 			"ImportPath": "golang.org/x/sys/windows",
+			"Rev": "8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/windows/registry",
 			"Rev": "8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9"
 		},
 		{
