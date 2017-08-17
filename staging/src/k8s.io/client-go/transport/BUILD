@@ -24,12 +24,14 @@ go_library(
     srcs = [
         "cache.go",
         "config.go",
+        "dial.go",
         "round_trippers.go",
         "transport.go",
     ],
     tags = ["automanaged"],
     deps = [
         "//vendor/github.com/golang/glog:go_default_library",
+        "//vendor/github.com/obeattie/tcp-failfast:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/net:go_default_library",
     ],
 )

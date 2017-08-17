@@ -9,7 +9,13 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = ["mksyscall.go"],
+    srcs = [
+        "doc.go",
+        "if.go",
+        "if_linux.go",
+        "params_linux.go",
+        "syscalls_linux.go",
+    ],
     tags = ["automanaged"],
 )
 
@@ -22,9 +28,6 @@ filegroup(
 
 filegroup(
     name = "all-srcs",
-    srcs = [
-        ":package-srcs",
-        "//vendor/golang.org/x/sys/windows/registry:all-srcs",
-    ],
+    srcs = [":package-srcs"],
     tags = ["automanaged"],
 )

@@ -9,8 +9,16 @@ load(
 
 go_library(
     name = "go_default_library",
-    srcs = ["mksyscall.go"],
+    srcs = [
+        "failfast.go",
+        "failfast_linux.go",
+        "server_test_linux.go",
+    ],
     tags = ["automanaged"],
+    deps = [
+        "//vendor/github.com/songgao/water:go_default_library",
+        "//vendor/golang.org/x/sys/unix:go_default_library",
+    ],
 )
 
 filegroup(
@@ -22,9 +30,6 @@ filegroup(
 
 filegroup(
     name = "all-srcs",
-    srcs = [
-        ":package-srcs",
-        "//vendor/golang.org/x/sys/windows/registry:all-srcs",
-    ],
+    srcs = [":package-srcs"],
     tags = ["automanaged"],
 )
