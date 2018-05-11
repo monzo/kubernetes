@@ -39,12 +39,13 @@ const (
 	MilliCPUToCPU = 1000
 
 	// 100000 is equivalent to 100ms
-	QuotaPeriod    = 100000
-	MinQuotaPeriod = 1000
+	DefaultQuotaPeriod uint64 = 100000
+	MinQuotaPeriod     int64  = 1000
 )
 
-// MilliCPUToQuota converts milliCPU to CFS quota and period values.
-func MilliCPUToQuota(milliCPU int64) (quota int64, period uint64) {
+// MilliCPUToQuota takes milliCPU (along with a CFS period, in usec) and returns
+// a CFS quota value
+func MilliCPUToQuota(milliCPU int64, period uint64) (quota int64) {
 	// CFS quota is measured in two values:
 	//  - cfs_period_us=100ms (the amount of time to measure usage across)
 	//  - cfs_quota=20ms (the amount of cpu time allowed to be used across a period)
@@ -55,11 +56,8 @@ func MilliCPUToQuota(milliCPU int64) (quota int64, period uint64) {
 		return
 	}
 
-	// we set the period to 100ms by default
-	period = QuotaPeriod
-
 	// we then convert your milliCPU to a value normalized over a period
-	quota = (milliCPU * QuotaPeriod) / MilliCPUToCPU
+	quota = (milliCPU * int64(period)) / MilliCPUToCPU
 
 	// quota needs to be a minimum of 1ms.
 	if quota < MinQuotaPeriod {
@@ -109,6 +107,7 @@ func ResourceConfigForPod(pod *v1.Pod, enforceCPULimits bool) *ResourceConfig {
 
 	cpuRequests := int64(0)
 	cpuLimits := int64(0)
+	cpuPeriod := DefaultQuotaPeriod
 	memoryLimits := int64(0)
 	if request, found := reqs[v1.ResourceCPU]; found {
 		cpuRequests = request.MilliValue()
@@ -116,13 +115,19 @@ func ResourceConfigForPod(pod *v1.Pod, enforceCPULimits bool) *ResourceConfig {
 	if limit, found := limits[v1.ResourceCPU]; found {
 		cpuLimits = limit.MilliValue()
 	}
+	// Because core/v1 is vendored from another Kubernetes repository (which is itself generated from code in
+	// this repo), it's too much of a faff to update it to include this constant. Thus, I'm just enshrining the
+	// constant value in this code directly. :mindblown:
+	if limit, found := limits["monzo.com/cpu-period"]; found {
+		cpuPeriod = uint64(limit.Value())
+	}
 	if limit, found := limits[v1.ResourceMemory]; found {
 		memoryLimits = limit.Value()
 	}
 
 	// convert to CFS values
 	cpuShares := MilliCPUToShares(cpuRequests)
-	cpuQuota, cpuPeriod := MilliCPUToQuota(cpuLimits)
+	cpuQuota := MilliCPUToQuota(cpuLimits, cpuPeriod)
 
 	// track if limits were applied for each resource.
 	memoryLimitsDeclared := true
