@@ -1,6 +1,6 @@
 {
 	"ImportPath": "k8s.io/kubernetes",
-	"GoVersion": "go1.9",
+	"GoVersion": "go1.10",
 	"GodepVersion": "v79",
 	"Packages": [
 		"github.com/onsi/ginkgo/ginkgo",
@@ -2140,6 +2140,10 @@
 			"Rev": "cca7078d478f8520f85629ad7c68962d31ed7682"
 		},
 		{
+			"ImportPath": "github.com/obeattie/tcp-failfast",
+			"Rev": "4e177a235cc8cf7c124319a8c14d3ff46df5a7db"
+		},
+		{
 			"ImportPath": "github.com/onsi/ginkgo",
 			"Comment": "v1.2.0-95-g67b9df7",
 			"Rev": "67b9df7f55fe1165fd9ad49aca7754cce01a42b8"
@@ -2565,6 +2569,10 @@
 			"Rev": "89742aefa4b206dcf400792f3bd35b542998eb3b"
 		},
 		{
+			"ImportPath": "github.com/songgao/water",
+			"Rev": "bf1a5d02778fcf40c282de352a53b1fe1f5b9f96"
+		},
+		{
 			"ImportPath": "github.com/spf13/afero",
 			"Rev": "b28a7effac979219c2a2ed6205a4d70e4b1bcd02"
 		},
@@ -2937,6 +2945,10 @@
 		},
 		{
 			"ImportPath": "golang.org/x/sys/windows",
+			"Rev": "95c6576299259db960f6c5b9b69ea52422860fce"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/windows/registry",
 			"Rev": "95c6576299259db960f6c5b9b69ea52422860fce"
 		},
 		{
