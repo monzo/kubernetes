@@ -2141,7 +2141,7 @@
 		},
 		{
 			"ImportPath": "github.com/obeattie/tcp-failfast",
-			"Rev": "4e177a235cc8cf7c124319a8c14d3ff46df5a7db"
+			"Rev": "d91a8bb6359669546bf3e3d1ee2215a21e018da1"
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",
