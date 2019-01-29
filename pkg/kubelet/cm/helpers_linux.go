@@ -39,8 +39,8 @@ const (
 	MilliCPUToCPU = 1000
 
 	// 100000 is equivalent to 100ms
-	DefaultQuotaPeriod int64 = 100000
-	MinQuotaPeriod     int64 = 1000
+	DefaultQuotaPeriod uint64 = 100000
+	MinQuotaPeriod     int64  = 1000
 )
 
 // MilliCPUToQuota takes milliCPU (along with a CFS period, in usec) and returns
@@ -116,7 +116,7 @@ func ResourceConfigForPod(pod *v1.Pod) *ResourceConfig {
 		cpuLimits = limit.MilliValue()
 	}
 	if limit, found := limits[v1.ResourceCPUPeriodUsec]; found {
-		cpuPeriod = limit.Value()
+		cpuPeriod = uint64(limit.Value())
 	}
 	if limit, found := limits[v1.ResourceMemory]; found {
 		memoryLimits = limit.Value()
@@ -124,7 +124,10 @@ func ResourceConfigForPod(pod *v1.Pod) *ResourceConfig {
 
 	// convert to CFS values
 	cpuShares := MilliCPUToShares(cpuRequests)
-	cpuQuota := MilliCPUToQuota(cpuLimits, cpuPeriod)
+
+	// TODO: possibility of uint64 -> int64 overflow; we assume that users of
+	// monzo.com/cpu-period won't put in stupidly large numbers
+	cpuQuota := MilliCPUToQuota(cpuLimits, int64(cpuPeriod))
 
 	// track if limits were applied for each resource.
 	memoryLimitsDeclared := true
