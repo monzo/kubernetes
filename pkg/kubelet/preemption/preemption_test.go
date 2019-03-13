@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -100,14 +100,14 @@ func TestEvictPodsToFreeRequests(t *testing.T) {
 		{
 			testName:              "critical pods cannot be preempted",
 			inputPods:             []*v1.Pod{allPods[critical]},
-			insufficientResources: getAdmissionRequirementList(0, 0, 1),
+			insufficientResources: getAdmissionRequirementList(0, 0, 1, 0),
 			expectErr:             true,
 			expectedOutput:        nil,
 		},
 		{
 			testName:              "best effort pods are not preempted when attempting to free resources",
 			inputPods:             []*v1.Pod{allPods[bestEffort]},
-			insufficientResources: getAdmissionRequirementList(0, 1, 0),
+			insufficientResources: getAdmissionRequirementList(0, 1, 0, 0),
 			expectErr:             true,
 			expectedOutput:        nil,
 		},
@@ -116,7 +116,7 @@ func TestEvictPodsToFreeRequests(t *testing.T) {
 			inputPods: []*v1.Pod{
 				allPods[critical], allPods[bestEffort], allPods[burstable], allPods[highRequestBurstable],
 				allPods[guaranteed], allPods[highRequestGuaranteed]},
-			insufficientResources: getAdmissionRequirementList(0, 550, 0),
+			insufficientResources: getAdmissionRequirementList(0, 550, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[highRequestBurstable], allPods[highRequestGuaranteed]},
 		},
@@ -164,70 +164,70 @@ func TestGetPodsToPreempt(t *testing.T) {
 		{
 			testName:              "no requirements",
 			inputPods:             []*v1.Pod{},
-			insufficientResources: getAdmissionRequirementList(0, 0, 0),
+			insufficientResources: getAdmissionRequirementList(0, 0, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{},
 		},
 		{
 			testName:              "no pods",
 			inputPods:             []*v1.Pod{},
-			insufficientResources: getAdmissionRequirementList(0, 0, 1),
+			insufficientResources: getAdmissionRequirementList(0, 0, 1, 0),
 			expectErr:             true,
 			expectedOutput:        nil,
 		},
 		{
 			testName:              "equal pods and resources requirements",
 			inputPods:             []*v1.Pod{allPods[burstable]},
-			insufficientResources: getAdmissionRequirementList(100, 100, 1),
+			insufficientResources: getAdmissionRequirementList(100, 100, 1, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[burstable]},
 		},
 		{
 			testName:              "higer requirements than pod requests",
 			inputPods:             []*v1.Pod{allPods[burstable]},
-			insufficientResources: getAdmissionRequirementList(200, 200, 2),
+			insufficientResources: getAdmissionRequirementList(200, 200, 2, 0),
 			expectErr:             true,
 			expectedOutput:        nil,
 		},
 		{
 			testName:              "choose between bestEffort and burstable",
 			inputPods:             []*v1.Pod{allPods[burstable], allPods[bestEffort]},
-			insufficientResources: getAdmissionRequirementList(0, 0, 1),
+			insufficientResources: getAdmissionRequirementList(0, 0, 1, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[bestEffort]},
 		},
 		{
 			testName:              "choose between burstable and guaranteed",
 			inputPods:             []*v1.Pod{allPods[burstable], allPods[guaranteed]},
-			insufficientResources: getAdmissionRequirementList(0, 0, 1),
+			insufficientResources: getAdmissionRequirementList(0, 0, 1, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[burstable]},
 		},
 		{
 			testName:              "choose lower request burstable if it meets requirements",
 			inputPods:             []*v1.Pod{allPods[bestEffort], allPods[highRequestBurstable], allPods[burstable]},
-			insufficientResources: getAdmissionRequirementList(100, 100, 0),
+			insufficientResources: getAdmissionRequirementList(100, 100, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[burstable]},
 		},
 		{
 			testName:              "choose higher request burstable if lower does not meet requirements",
 			inputPods:             []*v1.Pod{allPods[bestEffort], allPods[burstable], allPods[highRequestBurstable]},
-			insufficientResources: getAdmissionRequirementList(150, 150, 0),
+			insufficientResources: getAdmissionRequirementList(150, 150, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[highRequestBurstable]},
 		},
 		{
 			testName:              "multiple pods required",
 			inputPods:             []*v1.Pod{allPods[bestEffort], allPods[burstable], allPods[highRequestBurstable], allPods[guaranteed], allPods[highRequestGuaranteed]},
-			insufficientResources: getAdmissionRequirementList(350, 350, 0),
+			insufficientResources: getAdmissionRequirementList(350, 350, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[burstable], allPods[highRequestBurstable]},
 		},
 		{
 			testName:              "evict guaranteed when we have to, and dont evict the extra burstable",
 			inputPods:             []*v1.Pod{allPods[bestEffort], allPods[burstable], allPods[highRequestBurstable], allPods[guaranteed], allPods[highRequestGuaranteed]},
-			insufficientResources: getAdmissionRequirementList(0, 550, 0),
+			insufficientResources: getAdmissionRequirementList(0, 550, 0, 0),
 			expectErr:             false,
 			expectedOutput:        []*v1.Pod{allPods[highRequestBurstable], allPods[highRequestGuaranteed]},
 		},
@@ -255,25 +255,25 @@ func TestAdmissionRequirementsDistance(t *testing.T) {
 	runs := []testRun{
 		{
 			testName:       "no requirements",
-			requirements:   getAdmissionRequirementList(0, 0, 0),
+			requirements:   getAdmissionRequirementList(0, 0, 0, 0),
 			inputPod:       allPods[burstable],
 			expectedOutput: 0,
 		},
 		{
 			testName:       "no requests, some requirements",
-			requirements:   getAdmissionRequirementList(100, 100, 1),
+			requirements:   getAdmissionRequirementList(100, 100, 1, 0),
 			inputPod:       allPods[bestEffort],
 			expectedOutput: 2,
 		},
 		{
 			testName:       "equal requests and requirements",
-			requirements:   getAdmissionRequirementList(100, 100, 1),
+			requirements:   getAdmissionRequirementList(100, 100, 1, 0),
 			inputPod:       allPods[burstable],
 			expectedOutput: 0,
 		},
 		{
 			testName:       "higher requests than requirements",
-			requirements:   getAdmissionRequirementList(50, 50, 0),
+			requirements:   getAdmissionRequirementList(50, 50, 0, 0),
 			inputPod:       allPods[burstable],
 			expectedOutput: 0,
 		},
@@ -297,33 +297,33 @@ func TestAdmissionRequirementsSubtract(t *testing.T) {
 	runs := []testRun{
 		{
 			testName:       "subtract a pod from no requirements",
-			initial:        getAdmissionRequirementList(0, 0, 0),
+			initial:        getAdmissionRequirementList(0, 0, 0, 0),
 			inputPod:       allPods[burstable],
-			expectedOutput: getAdmissionRequirementList(0, 0, 0),
+			expectedOutput: getAdmissionRequirementList(0, 0, 0, 0),
 		},
 		{
 			testName:       "subtract no requests from some requirements",
-			initial:        getAdmissionRequirementList(100, 100, 1),
+			initial:        getAdmissionRequirementList(100, 100, 1, 0),
 			inputPod:       allPods[bestEffort],
-			expectedOutput: getAdmissionRequirementList(100, 100, 0),
+			expectedOutput: getAdmissionRequirementList(100, 100, 0, 0),
 		},
 		{
 			testName:       "equal requests and requirements",
-			initial:        getAdmissionRequirementList(100, 100, 1),
+			initial:        getAdmissionRequirementList(100, 100, 1, 0),
 			inputPod:       allPods[burstable],
-			expectedOutput: getAdmissionRequirementList(0, 0, 0),
+			expectedOutput: getAdmissionRequirementList(0, 0, 0, 0),
 		},
 		{
 			testName:       "subtract higher requests than requirements",
-			initial:        getAdmissionRequirementList(50, 50, 0),
+			initial:        getAdmissionRequirementList(50, 50, 0, 0),
 			inputPod:       allPods[burstable],
-			expectedOutput: getAdmissionRequirementList(0, 0, 0),
+			expectedOutput: getAdmissionRequirementList(0, 0, 0, 0),
 		},
 		{
 			testName:       "subtract lower requests than requirements",
-			initial:        getAdmissionRequirementList(200, 200, 1),
+			initial:        getAdmissionRequirementList(200, 200, 1, 0),
 			inputPod:       allPods[burstable],
-			expectedOutput: getAdmissionRequirementList(100, 100, 0),
+			expectedOutput: getAdmissionRequirementList(100, 100, 0, 0),
 		},
 	}
 	for _, run := range runs {
@@ -414,7 +414,7 @@ func parseNonCpuResourceToInt64(res string) int64 {
 	return (&r).Value()
 }
 
-func getAdmissionRequirementList(cpu, memory, pods int) admissionRequirementList {
+func getAdmissionRequirementList(cpu, memory, pods, cpuPeriod int) admissionRequirementList {
 	reqs := []*admissionRequirement{}
 	if cpu > 0 {
 		reqs = append(reqs, &admissionRequirement{
@@ -432,6 +432,12 @@ func getAdmissionRequirementList(cpu, memory, pods int) admissionRequirementList
 		reqs = append(reqs, &admissionRequirement{
 			resourceName: v1.ResourcePods,
 			quantity:     int64(pods),
+		})
+	}
+	if cpuPeriod > 0 {
+		reqs = append(reqs, &admissionRequirement{
+			resourceName: v1.ResourceCPUPeriodUsec,
+			quantity:     int64(cpuPeriod),
 		})
 	}
 	return admissionRequirementList(reqs)
