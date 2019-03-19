@@ -18,7 +18,7 @@ limitations under the License.
 
 package kuberuntime
 
-// milliCPUToShares converts milliCPU to CPU shares
-func milliCPUToShares(milliCPU int64) int64 {
-	return 0
-}
+// // milliCPUToShares converts milliCPU to CPU shares
+// func milliCPUToShares(milliCPU int64) int64 {
+// 	return 0
+// }
