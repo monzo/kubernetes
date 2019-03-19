@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -53,11 +53,14 @@ func TestResourceConfigForPod(t *testing.T) {
 	memoryQuantity := resource.MustParse("200Mi")
 	burstableMemory := memoryQuantity.Value()
 	burstablePartialShares := MilliCPUToShares(200)
-	burstableQuota, burstablePeriod := MilliCPUToQuota(200)
+	burstablePeriod := DefaultQuotaPeriod
+	burstableQuota := MilliCPUToQuota(200, burstablePeriod)
 	guaranteedShares := MilliCPUToShares(100)
-	guaranteedQuota, guaranteedPeriod := MilliCPUToQuota(100)
+	guaranteedPeriod := int64(10000)
+	guaranteedQuota := MilliCPUToQuota(100, guaranteedPeriod)
 	memoryQuantity = resource.MustParse("100Mi")
 	guaranteedMemory := memoryQuantity.Value()
+
 	testCases := map[string]struct {
 		pod      *v1.Pod
 		expected *ResourceConfig
@@ -67,19 +70,30 @@ func TestResourceConfigForPod(t *testing.T) {
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Resources: getResourceRequirements(getResourceList("", ""), getResourceList("", "")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{},
+								Limits:   v1.ResourceList{},
+							},
 						},
 					},
 				},
 			},
-			expected: &ResourceConfig{CpuShares: &minShares},
+			expected: &ResourceConfig{
+				CpuShares: &minShares,
+			},
 		},
 		"burstable-no-limits": {
 			pod: &v1.Pod{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Resources: getResourceRequirements(getResourceList("100m", "100Mi"), getResourceList("", "")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("100m"),
+									v1.ResourceMemory: resource.MustParse("100Mi"),
+								},
+								Limits: v1.ResourceList{},
+							},
 						},
 					},
 				},
@@ -91,39 +105,86 @@ func TestResourceConfigForPod(t *testing.T) {
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Resources: getResourceRequirements(getResourceList("100m", "100Mi"), getResourceList("200m", "200Mi")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("100m"),
+									v1.ResourceMemory: resource.MustParse("100Mi"),
+								},
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("200m"),
+									v1.ResourceMemory: resource.MustParse("200Mi"),
+								},
+							},
 						},
 					},
 				},
 			},
-			expected: &ResourceConfig{CpuShares: &burstableShares, CpuQuota: &burstableQuota, CpuPeriod: &burstablePeriod, Memory: &burstableMemory},
+			expected: &ResourceConfig{
+				CpuShares: &burstableShares,
+				CpuQuota:  &burstableQuota,
+				CpuPeriod: &burstablePeriod,
+				Memory:    &burstableMemory,
+			},
 		},
 		"burstable-partial-limits": {
 			pod: &v1.Pod{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Resources: getResourceRequirements(getResourceList("100m", "100Mi"), getResourceList("200m", "200Mi")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("100m"),
+									v1.ResourceMemory: resource.MustParse("100Mi"),
+								},
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("200m"),
+									v1.ResourceMemory: resource.MustParse("200Mi"),
+								},
+							},
 						},
 						{
-							Resources: getResourceRequirements(getResourceList("100m", "100Mi"), getResourceList("", "")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("100m"),
+									v1.ResourceMemory: resource.MustParse("100Mi"),
+								},
+								Limits: v1.ResourceList{},
+							},
 						},
 					},
 				},
 			},
-			expected: &ResourceConfig{CpuShares: &burstablePartialShares},
+			expected: &ResourceConfig{
+				CpuShares: &burstablePartialShares,
+			},
 		},
 		"guaranteed": {
 			pod: &v1.Pod{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Resources: getResourceRequirements(getResourceList("100m", "100Mi"), getResourceList("100m", "100Mi")),
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:           resource.MustParse("100m"),
+									v1.ResourceMemory:        resource.MustParse("100Mi"),
+									v1.ResourceCPUPeriodUsec: resource.MustParse("10000"),
+								},
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:           resource.MustParse("100m"),
+									v1.ResourceMemory:        resource.MustParse("100Mi"),
+									v1.ResourceCPUPeriodUsec: resource.MustParse("10000"),
+								},
+							},
 						},
 					},
 				},
 			},
-			expected: &ResourceConfig{CpuShares: &guaranteedShares, CpuQuota: &guaranteedQuota, CpuPeriod: &guaranteedPeriod, Memory: &guaranteedMemory},
+			expected: &ResourceConfig{
+				CpuShares: &guaranteedShares,
+				CpuQuota:  &guaranteedQuota,
+				CpuPeriod: &guaranteedPeriod,
+				Memory:    &guaranteedMemory,
+			},
 		},
 	}
 	for testName, testCase := range testCases {
@@ -145,55 +206,65 @@ func TestResourceConfigForPod(t *testing.T) {
 
 func TestMilliCPUToQuota(t *testing.T) {
 	testCases := []struct {
-		input  int64
+		cpu    int64
+		period int64
 		quota  int64
-		period uint64
 	}{
 		{
-			input:  int64(0),
+			cpu:    int64(0),
+			period: int64(100000),
 			quota:  int64(0),
-			period: uint64(0),
 		},
 		{
-			input:  int64(5),
+			cpu:    int64(5),
+			period: int64(100000),
 			quota:  int64(1000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(9),
+			cpu:    int64(9),
+			period: int64(100000),
 			quota:  int64(1000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(10),
+			cpu:    int64(10),
+			period: int64(100000),
 			quota:  int64(1000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(200),
+			cpu:    int64(200),
+			period: int64(100000),
 			quota:  int64(20000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(500),
+			cpu:    int64(500),
+			period: int64(100000),
 			quota:  int64(50000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(1000),
+			cpu:    int64(1000),
+			period: int64(100000),
 			quota:  int64(100000),
-			period: uint64(100000),
 		},
 		{
-			input:  int64(1500),
+			cpu:    int64(1500),
+			period: int64(100000),
 			quota:  int64(150000),
-			period: uint64(100000),
+		},
+		{
+			cpu:    int64(1500),
+			period: int64(10000),
+			quota:  int64(15000),
+		},
+		{
+			cpu:    int64(250),
+			period: int64(5000),
+			quota:  int64(1250),
 		},
 	}
 	for _, testCase := range testCases {
-		quota, period := MilliCPUToQuota(testCase.input)
-		if quota != testCase.quota || period != testCase.period {
-			t.Errorf("Input %v, expected quota %v period %v, but got quota %v period %v", testCase.input, testCase.quota, testCase.period, quota, period)
+		quota := MilliCPUToQuota(testCase.cpu, testCase.period)
+		if quota != testCase.quota {
+			t.Errorf("Input (cpu=%d, period=%d), expected quota=%d but got quota=%d", testCase.cpu, testCase.period, testCase.quota, quota)
 		}
 	}
 }

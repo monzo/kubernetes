@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -569,6 +569,7 @@ func (kl *Kubelet) setNodeStatusMachineInfo(node *v1.Node) {
 		node.Status.Capacity[v1.ResourceCPU] = *resource.NewMilliQuantity(0, resource.DecimalSI)
 		node.Status.Capacity[v1.ResourceMemory] = resource.MustParse("0Gi")
 		node.Status.Capacity[v1.ResourcePods] = *resource.NewQuantity(int64(kl.maxPods), resource.DecimalSI)
+		node.Status.Capacity[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
 		glog.Errorf("Error getting machine info: %v", err)
 	} else {
 		node.Status.NodeInfo.MachineID = info.MachineID
@@ -654,6 +655,7 @@ func (kl *Kubelet) setNodeStatusMachineInfo(node *v1.Node) {
 			node.Status.Allocatable[v1.ResourceMemory] = allocatableMemory
 		}
 	}
+	node.Status.Allocatable[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
 }
 
 // Set versioninfo for the node.
