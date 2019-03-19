@@ -4090,6 +4090,12 @@ const (
 	// Local ephemeral storage, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	// The resource name for ResourceEphemeralStorage is alpha and it can change across releases.
 	ResourceEphemeralStorage ResourceName = "ephemeral-storage"
+	// -- Monzo-specific
+
+	// CPU throttling period, in microseconds.
+	// NOTE: Only set this value yourself if you know very well how to tune the
+	// Linux CFS scheduler, or in consultation with the Platform team.
+	ResourceCPUPeriodUsec ResourceName = "monzo.com/cpu-period"
 )
 
 const (
