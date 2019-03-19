@@ -22,9 +22,10 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"strconv"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // getResourceList returns a ResourceList with the
@@ -54,9 +55,11 @@ func TestResourceConfigForPod(t *testing.T) {
 	memoryQuantity := resource.MustParse("200Mi")
 	burstableMemory := memoryQuantity.Value()
 	burstablePartialShares := MilliCPUToShares(200)
-	burstableQuota, burstablePeriod := MilliCPUToQuota(200)
+	burstablePeriod := DefaultQuotaPeriod
+	burstableQuota := MilliCPUToQuota(200)
 	guaranteedShares := MilliCPUToShares(100)
-	guaranteedQuota, guaranteedPeriod := MilliCPUToQuota(100)
+	guaranteedPeriod := int64(10000)
+	guaranteedQuota := MilliCPUToQuota(100)
 	memoryQuantity = resource.MustParse("100Mi")
 	cpuNoLimit := int64(-1)
 	guaranteedMemory := memoryQuantity.Value()
@@ -223,11 +226,21 @@ func TestMilliCPUToQuota(t *testing.T) {
 			quota:  int64(150000),
 			period: uint64(100000),
 		},
+		{
+			cpu:    int64(1500),
+			period: int64(10000),
+			quota:  int64(15000),
+		},
+		{
+			cpu:    int64(250),
+			period: int64(5000),
+			quota:  int64(1250),
+		},
 	}
 	for _, testCase := range testCases {
-		quota, period := MilliCPUToQuota(testCase.input)
-		if quota != testCase.quota || period != testCase.period {
-			t.Errorf("Input %v, expected quota %v period %v, but got quota %v period %v", testCase.input, testCase.quota, testCase.period, quota, period)
+		quota := MilliCPUToQuota(testCase.input, testCase.period)
+		if quota != testCase.quota {
+			t.Errorf("Input (cpu=%d, period=%d), expected quota=%d but got quota=%d", testCase.cpu, testCase.period, testCase.quota, quota)
 		}
 	}
 }
