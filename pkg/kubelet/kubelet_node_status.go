@@ -682,6 +682,7 @@ func (kl *Kubelet) setNodeStatusMachineInfo(node *v1.Node) {
 		}
 	}
 	node.Status.Allocatable[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
+	node.Status.Capacity[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
 }
 
 // Set versioninfo for the node.
