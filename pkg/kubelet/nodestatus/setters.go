@@ -26,7 +26,7 @@ import (
 
 	cadvisorapiv1 "github.com/google/cadvisor/info/v1"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -239,6 +239,7 @@ func MachineInfo(nodeName string,
 			node.Status.Capacity[v1.ResourceCPU] = *resource.NewMilliQuantity(0, resource.DecimalSI)
 			node.Status.Capacity[v1.ResourceMemory] = resource.MustParse("0Gi")
 			node.Status.Capacity[v1.ResourcePods] = *resource.NewQuantity(int64(maxPods), resource.DecimalSI)
+			node.Status.Capacity[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
 			glog.Errorf("Error getting machine info: %v", err)
 		} else {
 			node.Status.NodeInfo.MachineID = info.MachineID
@@ -344,6 +345,9 @@ func MachineInfo(nodeName string,
 				node.Status.Allocatable[v1.ResourceMemory] = allocatableMemory
 			}
 		}
+
+		node.Status.Allocatable[v1.ResourceCPUPeriodUsec] = *resource.NewQuantity(int64(kl.maxPods)*10000, resource.DecimalSI)
+
 		return nil
 	}
 }
