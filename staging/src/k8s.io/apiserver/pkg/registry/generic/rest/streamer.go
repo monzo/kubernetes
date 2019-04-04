@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -65,6 +66,7 @@ func (s *LocationStreamer) InputStream(ctx context.Context, apiVersion, acceptHe
 		Transport:     transport,
 		CheckRedirect: s.RedirectChecker,
 	}
+	glog.V(2).Infof("=========MONZO DEBUG HACK========= *LocationStreamer.InputStream. s=%+v, location=%s", s, s.Location.String)
 	req, err := http.NewRequest("GET", s.Location.String(), nil)
 	// Pass the parent context down to the request to ensure that the resources
 	// will be release properly.
