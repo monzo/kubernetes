@@ -116,7 +116,8 @@ func (r *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "service unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	glog.Infof("=========MONZO DEBUG HACK========= serviceResolver.ResolveEndpoint(%s, %s) = %+v", handlingInfo.serviceNamespace, handlingInfo.serviceName, rloc)
+
+	glog.V(2).Infof("=========MONZO DEBUG HACK========= serviceResolver.ResolveEndpoint(%s, %s) = %+v", handlingInfo.serviceNamespace, handlingInfo.serviceName, rloc)
 	location.Host = rloc.Host
 	location.Path = req.URL.Path
 	location.RawQuery = req.URL.Query().Encode()
